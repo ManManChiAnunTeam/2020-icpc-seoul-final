@@ -1,63 +1,59 @@
-#include <iostream>
-#include <set>
-#include <vector>
-#include <climits>
+#include <bits/stdc++.h>
 
-struct Edge
-{
-    int next, dist;
+using namespace std;
+using pi = pair<int, int>;
 
-    Edge(int n, int d)
-    {
-        next = n;
-        dist = d;
+int n, k, ans;
+vector<pi> adj[100000];
+int is_apt[100000], vst[100000];
+
+int dfs(int u) {
+    int ret = 0, cnt = 0;
+    vst[u] = true;
+
+    for (auto p : adj[u]) {
+        int v = p.first, w = p.second;
+        if (vst[v]) continue;
+        int c_ret = dfs(v);
+        if (c_ret < 0) continue;
+        cnt++;
+        ret += c_ret;
+    }
+    if (is_apt[u]) {
+        ans += ret + 1;
+        return 0;
+    }
+    ret++;
+    if (cnt > 1) {
+        ans += ret;
+        return 0;
+    } else if (cnt == 1) {
+        return ret;
+    }
+    return -1;
+}
+
+int main() {
+    cin.tie(0);
+    cout.tie(0);
+    ios::sync_with_stdio(false);
+    cin >> n >> k;
+    for (int i = 0; i < n - 1; i++) {
+        int u, v, w;
+        cin >> u >> v >> w;
+        u--; v--;
+        adj[u].push_back({v, w});
+        adj[v].push_back({u, w});
     }
 
-    bool operator<(const Edge& e) const
-    {
-        return dist < e.dist;
+    // apt
+    for (int i = 0; i < k; i++) {
+        int u;
+        cin >> u;
+        u--;
+        is_apt[u] = 1;
     }
-};
-
-int n, k;
-std::set<Edge> graph[100001];
-bool isGood[100001];
-std::vector<int> apart;
-
-int main()
-{
-    scanf("%d %d", &n, &k);
-
-    for (int i = 0; i < n-1; ++i)
-    {
-        int a, b, v;
-        scanf("%d %d %d", &a, &b, &v);
-        graph[a].emplace(b, v);
-        graph[b].emplace(a, v);
-    }
-
-    for (int i = 0; i < k; ++i)
-    {
-        int a;
-        scanf("%d", &a);
-        isGood[a] = true;
-        apart.push_back(a);
-    }
-
-    int result = 0;
-    for (int ap : apart)
-    {
-        ++result;
-        auto min = graph[ap].begin();
-        auto upper = graph[ap].upper_bound({0, min->dist});
-        if (std::next(min) == upper && !isGood[min->next])
-        {
-            ++result;
-            isGood[min->next] = true;
-        }
-    }
-
-    printf("%d", result);
-
-    return 0;
+    // sol
+    dfs(0);
+    cout << ans << '\n';
 }
